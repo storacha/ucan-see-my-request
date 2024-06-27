@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+      "strict": true,
+      "lib": [
+        "dom",
+        "dom.iterable",
+        "esnext"
+      ],
+      "module": "esnext",
+      "moduleResolution": "node",
+      "target": "es6",
+      "esModuleInterop": true,
+      "sourceMap": true,
+      "rootDir": "src",
+      "outDir": "dist",
+      "noEmitOnError": true,
+      "jsx": "react-jsx",
+      "typeRoots": [
+          "node_modules/@types"
+      ]
+  }
+}
