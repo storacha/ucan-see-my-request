@@ -10,7 +10,7 @@ This repository has the source code for the extension, which is not yet publishe
 
 ```
 npm install
-npm run project
+npm run build
 ```
 
 This will make a `dist` directory in the repository.
