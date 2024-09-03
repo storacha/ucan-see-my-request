@@ -37,9 +37,6 @@ export function isCarRequest(request : Request) {
 }
 
 export function formatError(error: any): string {
-  if (error === null || error === undefined) {
-    return "Error: null or undefined";
-  }
   try {
     return JSON.stringify(error, null, 2); // Format JSON with indentation
   } catch {
