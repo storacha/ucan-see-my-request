@@ -8,7 +8,7 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
-import {shortString, bigIntSafe, messageFromRequest, decodeMessage} from './util'
+import {shortString, bigIntSafe, messageFromRequest, decodeMessage, formatError} from './util'
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -119,7 +119,7 @@ function CollapsableRow({ header, children} : React.PropsWithChildren<{header:st
 }
 function ReceiptDisplay({receipt} : { receipt : Receipt }) {
   const index = {
-    Out: receipt.out.ok ? <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 4)}</pre> : `Error: ${receipt.out.error}`,
+    Out: receipt.out.ok ? <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 4)}</pre> : `Error: ${formatError(receipt.out.error)}`,
   }
   return (
     <Accordion>

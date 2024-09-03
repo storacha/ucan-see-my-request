@@ -1,7 +1,7 @@
 {
   "name": "UCan See My Request",
   "description": "Inspect UCAN requests",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "manifest_version": 3,
   "devtools_page": "devtools.html"
 }
