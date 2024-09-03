@@ -119,7 +119,7 @@ function CollapsableRow({ header, children} : React.PropsWithChildren<{header:st
 }
 function ReceiptDisplay({receipt} : { receipt : Receipt }) {
   const index = {
-    Out: receipt.out.ok ? <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 4)}</pre> : `Error: ${formatError(receipt.out.error)}`,
+    Out: receipt.out.ok ? <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 2)}</pre> : `Error: ${formatError(receipt.out.error)}`,
   }
   return (
     <Accordion>
