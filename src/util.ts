@@ -35,3 +35,14 @@ export const shortString = (st : string, n: number) => st.length > n ? st.substr
 export function isCarRequest(request : Request) {
   return request.request.headers.some((header) => header.name.toLowerCase() == 'content-type' && header.value == CAR.contentType)
 }
+
+export function formatError(error: any): string {
+  if (error === null || error === undefined) {
+    return "Error: null or undefined";
+  }
+  try {
+    return JSON.stringify(error, null, 2); // Format JSON with indentation
+  } catch {
+    return String(error); // Fallback for non-JSON errors
+  }
+}
