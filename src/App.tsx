@@ -79,7 +79,10 @@ function App() {
             flex: "1 1 50%",
           }}>
             
-              <RequestInspector request={selectedRequest}/>
+              <RequestInspector 
+                request={selectedRequest}
+                onClose={() => selectRequest(null)}
+              />
           </Box>  : ''
         }
       </Box>
