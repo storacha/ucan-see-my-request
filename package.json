@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode production",
-    "dev": "webpack --mode production --watch"
+    "dev": "webpack --mode production --watch",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf dist"
   },
   "author": "",
   "license": "ISC",
