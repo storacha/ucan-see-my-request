@@ -128,4 +128,3 @@ export function formatTiming(timeMs: number | null): string {
   
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
 }
-}

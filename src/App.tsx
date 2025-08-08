@@ -4,6 +4,7 @@ import { Request } from './types'
 import RequestList from "./RequestList"
 import RequestInspector from "./RequestInspector";
 import Box from '@mui/material/Box'
+import { Resplit } from "react-resplit";
 
 type SetAction = {
   action: "set",
@@ -67,44 +68,50 @@ function App() {
   })
 
   return (
-      <Box sx={{
-        display: 'flex',
-        height: '100vh',
-        flexDirection: {
-          xs: 'column',
-          md: 'row'
-        }
-      }}>
-        <Box sx={{
-          flex: "1 1 50%",
-          height: {
-            xs: "50%",
-            md: "100%",
-          },
-          width: {
-            xs: "100%",
-            md: "50%",
-          },
+    <Resplit.Root 
+      direction="horizontal" style={{ height: '100vh' }}>
+      <Resplit.Pane
+        order={0}
+        initialSize={selectedRequest ? '0.5fr' : '1fr'}
+        minSize="150px"
+      >
+        <Box sx={{ 
+            height: '100%', 
+            overflow: 'auto' 
         }}>
-          <RequestList 
-            requests={requests} 
-            selectedRequest={selectedRequest} 
+          <RequestList
+            requests={requests}
+            selectedRequest={selectedRequest}
             selectRequest={selectRequest}
           />
         </Box>
-        {
-          selectedRequest ?
-          <Box sx={{
-            flex: "1 1 50%",
-          }}>
-            
-              <RequestInspector 
+      </Resplit.Pane>
+
+      {selectedRequest && (
+        <>
+          <Resplit.Splitter
+            order={1}
+            size="6px"
+            style={{ background: '#ccc', cursor: 'col-resize' }}
+          />
+          <Resplit.Pane
+            order={2}
+            initialSize="0.5fr"
+            minSize="150px"
+          >
+            <Box sx={{ 
+              height: '100%', 
+              overflow: 'auto' 
+            }}>
+              <RequestInspector
                 request={selectedRequest}
-                onClose={() => selectRequest(null)}
+                onClose={selectRequest(null)}
               />
-          </Box>  : ''
-        }
-      </Box>
+            </Box>
+          </Resplit.Pane>
+        </>
+      )}
+    </Resplit.Root>
   );
 }
 
