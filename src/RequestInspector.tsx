@@ -9,6 +9,8 @@ import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
 import {shortString, bigIntSafe, messageFromRequest, decodeMessage, formatError} from './util'
+import JsonView from './JsonView';
+
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -49,7 +51,7 @@ function CapabilityDisplay({ capability } : { capability: Capability }) {
   const index : Record<string, React.ReactNode> = Object.assign({
     Can: capability.can,
     With: shortString(capability.with, 60)
-  }, capability.nb ? { NB: JSON.stringify(capability.nb, bigIntSafe, 4) } : {})
+  }, capability.nb ? { NB: <JsonView src={capability.nb} /> } : {})
   return (
     <TableDisplay size="small" index={index} />
   )
@@ -154,7 +156,7 @@ function CollapsableRow({ header, children} : React.PropsWithChildren<{header:st
 }
 function ReceiptDisplay({receipt} : { receipt : Receipt }) {
   const index = {
-    Out: receipt.out.ok ? <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 2)}</pre> : `Error: ${formatError(receipt.out.error)}`,
+    Out: receipt.out.ok ? <JsonView src={receipt.out.ok} /> : `Error: ${formatError(receipt.out.error)}`,
   }
   return (
     <Accordion>
