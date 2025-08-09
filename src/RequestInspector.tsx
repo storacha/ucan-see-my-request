@@ -104,9 +104,9 @@ function InvocationTable({invocation} : { invocation : Invocation }) {
   )
 }
 
-function InvocationDisplay({invocation} : { invocation : Invocation }) {
+function InvocationDisplay({invocation, expanded = false} : { invocation : Invocation, expanded : boolean }) {
   return (
-    <Accordion>
+    <Accordion defaultExpanded={expanded}>
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         aria-controls="panel1-content"
@@ -152,12 +152,12 @@ function CollapsableRow({ header, children} : React.PropsWithChildren<{header:st
     </Fragment>
   )
 }
-function ReceiptDisplay({receipt} : { receipt : Receipt }) {
+function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expanded : boolean }) {
   const index = {
     Out: receipt.out.ok ? <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 2)}</pre> : `Error: ${formatError(receipt.out.error)}`,
   }
   return (
-    <Accordion>
+    <Accordion defaultExpanded={expanded}>
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         aria-controls="panel1-content"
@@ -187,8 +187,22 @@ function ReceiptDisplay({receipt} : { receipt : Receipt }) {
 }
 
 function MessageDisplay({message} : { message : AgentMessage}) {
-  const invocations = message.invocations.map(invocation => <InvocationDisplay invocation={invocation} />)
-  const receipts = Array.from(message.receipts.values()).map(receipt => <ReceiptDisplay receipt={receipt} />)
+  const invocations = message.invocations.map((invocation, i) => (
+    <InvocationDisplay 
+      invocation={invocation}
+      expanded={i === 0}
+      key={invocation.cid.toString()}
+    />
+  ))
+
+  const receipts = Array.from(message.receipts.values()).map((receipt, i) => (
+    <ReceiptDisplay 
+      receipt={receipt}
+      expanded={i === 0}
+      key={receipt.link().toString()}
+    />
+  ))
+
   return <Box>
     { invocations.length > 0 && <Card>
       <CardHeader title="Invocations"></CardHeader>
