@@ -228,7 +228,7 @@ function ResponseDisplay({request} : { request: Request}) {
   useEffect(() => {
     let ignore = false
     if (isChromeRequest(request)) {
-      request.getContent((content, encoding) => {
+      request.getContent((content: string, encoding: string) => {
         if (!ignore) {
           let decoded = content
           if (encoding == 'base64') {

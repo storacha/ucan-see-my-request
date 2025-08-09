@@ -1,3 +1,3 @@
-export type Request = chrome.devtools.network.Request | chrome.devtools.network.HAREntry
+export type Request = any;
 
-export const isChromeRequest = (request: Request) : request is chrome.devtools.network.Request => (typeof (request as chrome.devtools.network.Request).getContent === 'function')
+export const isChromeRequest = (request: Request) : boolean => (typeof (request as any).getContent === 'function')

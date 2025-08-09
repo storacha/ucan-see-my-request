@@ -1,11 +1,8 @@
 {
   "compilerOptions": {
       "strict": true,
-      "lib": [
-        "dom",
-        "dom.iterable",
-        "esnext"
-      ],
+      "types": ["webextension-polyfill"],
+      "lib": ["dom", "esnext", "webworker"],
       "module": "esnext",
       "moduleResolution": "node",
       "target": "es6",

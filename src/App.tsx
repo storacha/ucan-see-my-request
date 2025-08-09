@@ -4,6 +4,7 @@ import { Request } from './types'
 import RequestList from "./RequestList"
 import RequestInspector from "./RequestInspector";
 import Box from '@mui/material/Box'
+import "webextension-polyfill";
 
 type SetAction = {
   action: "set",
@@ -33,21 +34,21 @@ function App() {
   useEffect(() => {
     let ignore = false
     dispatch({action: "set", requests: []})
-    chrome.devtools.network.getHAR((harLog) => {
+    browser.devtools.network.getHAR().then((harLog: any) => {
       if (!ignore) {
-        dispatch({ action: "set", requests: harLog.entries})
+        dispatch({ action: "set", requests: harLog.entries })
       }
-    })
+    });
     return () => {
       ignore = true
     }
   }, [])
   
   useEffect(() => {
-    const listener = (request : chrome.devtools.network.Request) => { dispatch({action: "increment", request}) }
-    chrome.devtools.network.onRequestFinished.addListener(listener)
+    const listener = (request : any) => { dispatch({action: "increment", request}) }
+    browser.devtools.network.onRequestFinished.addListener(listener)
     return () => {
-      chrome.devtools.network.onRequestFinished.removeListener(listener)
+      browser.devtools.network.onRequestFinished.removeListener(listener)
     }
   })
 
