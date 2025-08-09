@@ -53,15 +53,27 @@ function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size
                 navigator.clipboard?.writeText(copyText).catch(() => {})
               }
               return <TableRow key={heading}>
-                <TableCell></TableCell>
-                <TableCell>{heading}</TableCell>
-                <TableCell>
-                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                    <span>{displayNode}</span>
-                    <IconButton size="small" aria-label={`Copy ${heading}`} onClick={handleCopy} disabled={!copyText}>
-                      <ContentCopyIcon fontSize="inherit" />
-                    </IconButton>
-                  </Box>
+                <TableCell sx={{
+                  width: '120px',
+                  minWidth: '120px',
+                  fontWeight: 500,
+                }}>{heading}</TableCell>
+                <TableCell sx={{
+                  maxWidth: 0,
+                  width: '100%',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  '& pre': {
+                    margin: 0,
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-all',
+                  },
+                }}>{displayNode}</TableCell>
+                <TableCell sx={{ width: '48px', minWidth: '48px' }}>
+                  <IconButton size="small" aria-label={`Copy ${heading}`} onClick={handleCopy} disabled={!copyText}>
+                    <ContentCopyIcon fontSize="inherit" />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             })
@@ -197,7 +209,6 @@ function CollapsableRow({ header, children} : React.PropsWithChildren<{header:st
     </Fragment>
   )
 }
- 
 function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expanded : boolean }) {
   const index: Record<string, ReactNode | { display: ReactNode, copy: string }> = {
     Out: receipt.out.ok
@@ -236,6 +247,7 @@ function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expan
                   </IconButton>
                 </Box>
               </TableCell>
+              <TableCell></TableCell>
             </TableRow>
           }
         </TableDisplay>
