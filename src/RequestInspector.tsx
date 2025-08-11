@@ -8,7 +8,8 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
-import {shortString, bigIntSafe, messageFromRequest, decodeMessage, formatError} from './util'
+import Button from '@mui/material/Button';
+import {shortString, bigIntSafe, messageFromRequest, decodeMessage, formatError, saveCarToFile, isCarRequest} from './util'
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -208,12 +209,56 @@ function MessageDisplay({message} : { message : AgentMessage}) {
 
 function RequestDisplay({request} : { request: Request}) {
   const message = messageFromRequest(request)
-  return <div>{typeof message == 'string' ? message : <MessageDisplay message={message}/>}</div>
+  
+  const handleSaveRequest = () => {
+    if (request.request.postData?.text) {
+      saveCarToFile(request.request.postData.text, 'request', request.request.url);
+    }
+  };
+
+  return (
+    <div>
+      {isCarRequest(request) && (
+        <Box sx={{ mb: 2 }}>
+          <Button 
+            variant="contained" 
+            onClick={handleSaveRequest}
+            disabled={!request.request.postData?.text}
+          >
+            Save Request CAR
+          </Button>
+        </Box>
+      )}
+      {typeof message == 'string' ? message : <MessageDisplay message={message}/>}
+    </div>
+  );
 }
 
-function ResponseBodyDisplay({ body } : {body : string}) {
+function ResponseBodyDisplay({ body, request } : {body : string, request: Request}) {
   const message = decodeMessage(body)
-  return <div>{typeof message == 'string' ? message : <MessageDisplay message={message}/>}</div>
+  
+  const handleSaveResponse = () => {
+    if (body) {
+      saveCarToFile(body, 'response', request.request.url);
+    }
+  };
+
+  return (
+    <div>
+      {isCarRequest(request) && (
+        <Box sx={{ mb: 2 }}>
+          <Button 
+            variant="contained" 
+            onClick={handleSaveResponse}
+            disabled={!body}
+          >
+            Save Response CAR
+          </Button>
+        </Box>
+      )}
+      {typeof message == 'string' ? message : <MessageDisplay message={message}/>}
+    </div>
+  );
 }
 
 function ResponseDisplay({request} : { request: Request}) {
@@ -242,7 +287,7 @@ function ResponseDisplay({request} : { request: Request}) {
       ignore = true
     }
   }, [request])
-  return <ResponseBodyDisplay body={body} />
+  return <ResponseBodyDisplay body={body} request={request} />
 }
 
 

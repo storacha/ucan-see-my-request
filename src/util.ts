@@ -43,3 +43,23 @@ export function formatError(error: any): string {
     return String(error); // Fallback for non-JSON errors
   }
 }
+
+export function saveCarToFile(carData: string, prefix: string, url: string) {
+  const uint8Array = convertBinaryStringToUint8Array(carData);
+  const blob = new Blob([uint8Array], { type: 'application/vnd.ipld.car' });
+
+  const blobUrl = URL.createObjectURL(blob);
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  
+  const urlPart = url.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30);
+  
+  const a = document.createElement('a');
+  a.href = blobUrl;
+  a.download = `${prefix}_${timestamp}_${urlPart}.car`;
+  document.body.appendChild(a);
+  a.click();
+  
+  document.body.removeChild(a);
+  URL.revokeObjectURL(blobUrl);
+}
