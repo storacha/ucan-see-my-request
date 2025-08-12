@@ -33,7 +33,7 @@ export const bigIntSafe = (_ : any, value : any) => typeof value === 'bigint' ? 
 export const shortString = (st : string, n: number) => st.length > n ? st.substring(0, n) + '...' : st
 
 export function isCarRequest(request : Request) {
-  return request.request.headers.some((header: { name: string; value: string }) => header.name.toLowerCase() == 'content-type' && header.value == CAR.contentType)
+  return request.request.headers.some(header => header.name.toLowerCase() == 'content-type' && header.value == CAR.contentType)
 }
 
 export function formatError(error: any): string {
