@@ -28,7 +28,7 @@ export function messageFromRequest(request : Request) : AgentMessage | string {
   return decodeMessage(request.request.postData.text)
 }
 
-export const bigIntSafe = (_ : any, value : any) => typeof value === 'bigint' ? value.toString() : value
+export const bigIntSafe = (_: unknown, value: unknown) => typeof value === 'bigint' ? value.toString() : value
 
 export const shortString = (st : string, n: number) => st.length > n ? st.substring(0, n) + '...' : st
 
@@ -36,7 +36,7 @@ export function isCarRequest(request : Request) {
   return request.request.headers.some(header => header.name.toLowerCase() == 'content-type' && header.value == CAR.contentType)
 }
 
-export function formatError(error: any): string {
+export function formatError(error: unknown): string {
   try {
     return JSON.stringify(error, null, 2); // Format JSON with indentation
   } catch {
