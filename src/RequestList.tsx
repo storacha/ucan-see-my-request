@@ -1,4 +1,5 @@
-import { Request } from "./types"
+import React from 'react'
+import { Request, isChromeRequest } from "./types"
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
@@ -10,6 +11,7 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import { isCarRequest, messageFromRequest, getRequestStatus, getStatusColor, getRequestTiming, formatTiming } from "./util";
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+
 
 function RequestEntry({ request, selectedRequest, selectRequest } : {request: Request, selectedRequest: Request | null, selectRequest: (request: Request) => void}) {
   const message = messageFromRequest(request)
@@ -44,7 +46,7 @@ function RequestList({ requests, selectedRequest, selectRequest } : { requests: 
     localStorage.setItem('persistOnReload', JSON.stringify(e.target.checked))
   }
 
-  const requestItems = requests.filter(isCarRequest).map(request => <RequestEntry selectedRequest={selectedRequest} selectRequest={selectRequest} request={request} />)
+  const requestItems = requests.filter(isCarRequest).map((request, idx) => <RequestEntry key={`${request.request.url}-${idx}`} selectedRequest={selectedRequest} selectRequest={selectRequest} request={request} />)
   return (
     <TableContainer sx={{height: "100%", overflowY: "scroll"}}>
     <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, py: 1 }}>
