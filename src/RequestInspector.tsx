@@ -2,6 +2,7 @@ import { useState, useEffect, ReactNode } from "react"
 import { AgentMessage, Invocation, Receipt, Capability, Proof, Delegation as DelegationType} from "@ucanto/interface"
 import { isDelegation} from '@ucanto/core'
 import { Request, isChromeRequest } from './types'
+import * as DagJSON from '@ipld/dag-json'
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -76,6 +77,9 @@ function ProofDisplay({ proof } : { proof: Proof }) {
         <CollapsableRow header="Proofs">
           {proofs}
         </CollapsableRow>
+        <CollapsableRow header="Facts">
+          <FactDisplay facts={proof.facts} />
+        </CollapsableRow>
       </TableDisplay>
     )
   } else {
@@ -83,6 +87,42 @@ function ProofDisplay({ proof } : { proof: Proof }) {
       <pre>{JSON.stringify(proof, null, 2)}</pre>
     )
   }
+}
+
+function FactDisplay({ facts } : { facts: any[] }) {
+  if (facts.length === 0) {
+    return <div style={{fontStyle: 'italic', color: '#666'}}>No facts</div>
+  }
+  
+  const formatFact = (fact: any) => {
+    try {
+      const dagJsonString = DagJSON.stringify(fact)
+      return JSON.stringify(JSON.parse(dagJsonString), null, 2)
+    } catch {
+      return JSON.stringify(fact, bigIntSafe, 2)
+    }
+  }
+  
+  return (
+    <div>
+      {facts.map((fact, index) => (
+        <div key={index} style={{marginBottom: '8px'}}>
+          <div style={{fontWeight: 'bold', marginBottom: '4px'}}>Fact {index + 1}:</div>
+          <pre style={{
+            backgroundColor: '#f5f5f5', 
+            padding: '8px', 
+            borderRadius: '4px',
+            overflow: 'auto',
+            fontSize: '12px',
+            margin: 0,
+            fontFamily: 'Monaco, Consolas, "Lucida Console", monospace'
+          }}>
+            {formatFact(fact)}
+          </pre>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 function InvocationTable({invocation} : { invocation : Invocation }) {

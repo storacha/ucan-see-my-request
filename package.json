@@ -10,6 +10,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@ipld/dag-json": "^10.1.5",
     "@types/chrome": "^0.0.193",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
