@@ -9,7 +9,7 @@ import Box from '@mui/material/Box';
 import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
-import {shortString, bigIntSafe, messageFromRequest, decodeMessage, formatError} from './util'
+import {shortString, bigIntSafe, messageFromRequest, decodeMessage, formatError, getRequestStatus, getStatusColor} from './util'
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -24,9 +24,13 @@ import IconButton from '@mui/material/IconButton';
 import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Paper from '@mui/material/Paper'
+import CloseIcon from '@mui/icons-material/Close';
+import Tooltip from '@mui/material/Tooltip';
 
 import { Fragment } from 'react'
 import { Delegation } from "@ucanto/core/delegation";
+import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+ 
 function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size? : "small" | "medium", index : Record<string, React.ReactNode> }>) {
   return (
       <Table size={size}>
@@ -65,6 +69,7 @@ function ProofDisplay({ proof } : { proof: Proof }) {
     const capabilities = proof.capabilities.map(capability => <CapabilityDisplay capability={capability} />)
     const proofs = proof.proofs.map((proof) => <ProofDisplay proof={proof}/>)
     const index: Record<string, ReactNode> = {
+      'Root CID': <ShortenAndScroll>{proof.cid.toString()}</ShortenAndScroll>,
       Issuer: <ShortenAndScroll>{proof.issuer.did()}</ShortenAndScroll>,
       Audience: <ShortenAndScroll>{proof.audience.did()}</ShortenAndScroll>,
       Expiration: proof.expiration.toString(),
@@ -83,9 +88,10 @@ function ProofDisplay({ proof } : { proof: Proof }) {
       </TableDisplay>
     )
   } else {
-    return (
-      <pre>{JSON.stringify(proof, null, 2)}</pre>
-    )
+    const index: Record<string, ReactNode> = {
+      'Root CID': <ShortenAndScroll>{proof.toString()}</ShortenAndScroll>,
+    }
+    return <TableDisplay size="small" index={index} />
   }
 }
 
@@ -285,7 +291,6 @@ function ResponseDisplay({request} : { request: Request}) {
   return <ResponseBodyDisplay body={body} />
 }
 
-
 function a11yProps(index: number) {
   return {
     id: `simple-tab-${index}`,
@@ -315,8 +320,9 @@ function CustomTabPanel(props: TabPanelProps) {
   );
 }
 
-function RequestInspector({request} : {request: Request}) {
+function RequestInspector({request, onClose} : {request: Request, onClose: () => void}) {
   const [tabIndex, setTabIndex] = useState(0)
+  const status = getRequestStatus(request);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
@@ -325,7 +331,19 @@ function RequestInspector({request} : {request: Request}) {
   return (
     <Paper sx={{ height: "100%", overflowY: "scroll" }} elevation={3}>
     <Box sx={{ width: '100%' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', display: 'flex', alignItems: 'center', p: 1 }}>
+        <FiberManualRecordIcon 
+          sx={{ 
+            color: getStatusColor(status), 
+            fontSize: 16, 
+            mr: 1 
+          }} 
+        />
+        <Tooltip title="Close panel">
+          <IconButton onClick={onClose}>
+            <CloseIcon />
+          </IconButton>
+        </Tooltip>
         <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example">
           <Tab label="Request" {...a11yProps(0)} />
           <Tab label="Response" {...a11yProps(1)} />

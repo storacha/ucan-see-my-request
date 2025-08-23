@@ -44,6 +44,21 @@ function App() {
   }, [])
   
   useEffect(() => {
+    const handleNavigated = () => {
+      const stored = localStorage.getItem('persistOnReload')
+      const shouldPersist = stored ? JSON.parse(stored) : false
+      if (!shouldPersist) {
+        dispatch({ action: 'set', requests: [] })
+        selectRequest(null)
+      }
+    }
+    chrome.devtools.network.onNavigated.addListener(handleNavigated)
+    return () => {
+      chrome.devtools.network.onNavigated.removeListener(handleNavigated)
+    }
+  }, [])
+  
+  useEffect(() => {
     const listener = (request : chrome.devtools.network.Request) => { dispatch({action: "increment", request}) }
     chrome.devtools.network.onRequestFinished.addListener(listener)
     return () => {
@@ -71,7 +86,11 @@ function App() {
             md: "50%",
           },
         }}>
-          <RequestList requests={requests} selectedRequest={selectedRequest} selectRequest={selectRequest}/>
+          <RequestList 
+            requests={requests} 
+            selectedRequest={selectedRequest} 
+            selectRequest={selectRequest}
+          />
         </Box>
         {
           selectedRequest ?
@@ -79,7 +98,10 @@ function App() {
             flex: "1 1 50%",
           }}>
             
-              <RequestInspector request={selectedRequest}/>
+              <RequestInspector 
+                request={selectedRequest}
+                onClose={() => selectRequest(null)}
+              />
           </Box>  : ''
         }
       </Box>
