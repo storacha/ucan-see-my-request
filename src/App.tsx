@@ -105,7 +105,7 @@ function App() {
             }}>
               <RequestInspector
                 request={selectedRequest}
-                onClose={selectRequest(null)}
+                onClose={() => selectRequest(null)}
               />
             </Box>
           </Resplit.Pane>
