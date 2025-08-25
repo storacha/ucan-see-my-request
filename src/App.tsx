@@ -72,6 +72,7 @@ function App() {
       direction="horizontal" style={{ height: '100vh' }}>
       <Resplit.Pane
         order={0}
+        key={selectedRequest ? "with-inspector" : "solo"}
         initialSize={selectedRequest ? '0.5fr' : '1fr'}
         minSize="150px"
       >
