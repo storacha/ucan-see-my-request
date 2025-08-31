@@ -209,7 +209,6 @@ Potential improvements for Safari implementation:
 - Request filtering and search capabilities
 
 ## Support
-
 For Safari-specific issues:
 1. Check this documentation first
 2. Test with minimal reproduction case
