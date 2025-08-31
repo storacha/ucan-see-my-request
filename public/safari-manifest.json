@@ -1,0 +1,34 @@
+{
+  "name": "UCan See My Request (Safari)",
+  "description": "Safari Web Extension to inspect UCAN requests to Storacha endpoints",
+  "version": "1.0.1",
+  "manifest_version": 3,
+  "devtools_page": "devtools.html",
+  "background": {
+    "service_worker": "safari-background.js"
+  },
+  "action": {
+    "default_title": "UCAN Debug Panel",
+    "default_popup": ""
+  },
+  "permissions": [
+    "scripting",
+    "activeTab",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["safari-content-script.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "browser_specific_settings": {
+    "safari": {
+      "strict_min_version": "16.4"
+    }
+  }
+}
