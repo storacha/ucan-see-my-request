@@ -12,7 +12,6 @@ import FormControlLabel from '@mui/material/FormControlLabel';
 import { isCarRequest, messageFromRequest, getRequestStatus, getStatusColor, getRequestTiming, formatTiming } from "./util";
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
 
-
 function RequestEntry({ request, selectedRequest, selectRequest } : {request: Request, selectedRequest: Request | null, selectRequest: (request: Request) => void}) {
   const message = messageFromRequest(request)
   const status = getRequestStatus(request);

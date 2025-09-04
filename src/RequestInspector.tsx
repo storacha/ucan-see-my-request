@@ -25,6 +25,8 @@ import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
 import Paper from '@mui/material/Paper'
 import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from '@mui/material/Tooltip';
+import Button from '@mui/material/Button';
+import DownloadIcon from '@mui/icons-material/Download';
 
 import { Fragment } from 'react'
 import { Delegation } from "@ucanto/core/delegation";
@@ -192,7 +194,7 @@ function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expan
   )
 }
 
-function MessageDisplay({message} : { message : AgentMessage}) {
+function MessageDisplay({message, request, type} : { message : AgentMessage, request: Request, type: 'request' | 'response'}) {
   const invocations = message.invocations.map((invocation, i) => (
     <InvocationDisplay 
       invocation={invocation}
@@ -208,6 +210,52 @@ function MessageDisplay({message} : { message : AgentMessage}) {
       key={receipt.link().toString()}
     />
   ))
+  
+  const handleSave = async () => {
+    if (isChromeRequest(request)) {
+      if (type === 'request') {
+        // For request, we need to get the request body
+        const anyReq: any = request as any
+        const postData = anyReq?.request?.postData
+        if (postData?.text) {
+          let content = postData.text
+          if (postData.encoding === 'base64') {
+            content = atob(postData.text)
+          }
+          const bytes = new Uint8Array(content.split('').map((char: string) => char.charCodeAt(0)))
+          const blob = new Blob([bytes], { type: 'application/car' })
+          const url = URL.createObjectURL(blob)
+          const a = document.createElement('a')
+          a.href = url
+          a.download = `request-${Date.now()}.car`
+          document.body.appendChild(a)
+          a.click()
+          document.body.removeChild(a)
+          URL.revokeObjectURL(url)
+        }
+      } else {
+        // For response, get the response body
+        request.getContent((content, encoding) => {
+          if (content) {
+            let decoded = content
+            if (encoding === 'base64') {
+              decoded = atob(content)
+            }
+            const bytes = new Uint8Array(decoded.split('').map((char: string) => char.charCodeAt(0)))
+            const blob = new Blob([bytes], { type: 'application/car' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `response-${Date.now()}.car`
+            document.body.appendChild(a)
+            a.click()
+            document.body.removeChild(a)
+            URL.revokeObjectURL(url)
+          }
+        })
+      }
+    }
+  }
 
   return <Box>
     { invocations.length > 0 && <Card>
@@ -223,17 +271,28 @@ function MessageDisplay({message} : { message : AgentMessage}) {
         { receipts }
       </CardContent>
     </Card> }
+    <Box sx={{ mt: 2, display: 'flex', justifyContent: 'center' }}>
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleSave}
+        startIcon={<DownloadIcon />}
+        size="large"
+      >
+        SAVE {type.toUpperCase()} CAR
+      </Button>
+    </Box>
   </Box>
 }
 
 function RequestDisplay({request} : { request: Request}) {
   const message = messageFromRequest(request)
-  return <div>{typeof message == 'string' ? message : <MessageDisplay message={message}/>}</div>
+  return <div>{typeof message == 'string' ? message : <MessageDisplay message={message} request={request} type="request"/>}</div>
 }
 
-function ResponseBodyDisplay({ body } : {body : string}) {
+function ResponseBodyDisplay({ body, request } : {body : string, request: Request}) {
   const message = decodeMessage(body)
-  return <div>{typeof message == 'string' ? message : <MessageDisplay message={message}/>}</div>
+  return <div>{typeof message == 'string' ? message : <MessageDisplay message={message} request={request} type="response"/>}</div>
 }
 
 function ResponseDisplay({request} : { request: Request}) {
@@ -262,7 +321,8 @@ function ResponseDisplay({request} : { request: Request}) {
       ignore = true
     }
   }, [request])
-  return <ResponseBodyDisplay body={body} />
+
+  return <ResponseBodyDisplay body={body} request={request} />
 }
 
 function a11yProps(index: number) {
