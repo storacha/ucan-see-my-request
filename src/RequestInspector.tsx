@@ -223,7 +223,7 @@ function MessageDisplay({message, request, type} : { message : AgentMessage, req
             content = atob(postData.text)
           }
           const bytes = new Uint8Array(content.split('').map((char: string) => char.charCodeAt(0)))
-          const blob = new Blob([bytes], { type: 'application/car' })
+          const blob = new Blob([bytes], { type: 'application/vnd.ipld.car' })
           const url = URL.createObjectURL(blob)
           const a = document.createElement('a')
           a.href = url
@@ -242,7 +242,7 @@ function MessageDisplay({message, request, type} : { message : AgentMessage, req
               decoded = atob(content)
             }
             const bytes = new Uint8Array(decoded.split('').map((char: string) => char.charCodeAt(0)))
-            const blob = new Blob([bytes], { type: 'application/car' })
+            const blob = new Blob([bytes], { type: 'application/vnd.ipld.car' })
             const url = URL.createObjectURL(blob)
             const a = document.createElement('a')
             a.href = url
