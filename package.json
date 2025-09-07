@@ -5,7 +5,11 @@
   "main": "index.js",
   "scripts": {
     "build": "webpack --mode production",
-    "dev": "webpack --mode production --watch"
+    "dev": "webpack --mode production --watch",
+    "build:safari": "BUILD_TARGET=safari webpack --mode production",
+    "dev:safari": "BUILD_TARGET=safari webpack --mode production --watch",
+    "safari:convert": "npm run build:safari && xcrun safari-web-extension-converter dist --project-location ./safari --app-name \"UCAN See My Request\" --bundle-identifier \"network.storacha.ucansee\" --copy-resources --no-open",
+    "safari:clean": "rm -rf safari && rm -rf dist"
   },
   "author": "",
   "license": "ISC",
