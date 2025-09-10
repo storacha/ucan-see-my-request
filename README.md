@@ -25,7 +25,16 @@ Sometimes it doesn't show up immediately -- if this is the case, I recommend clo
 
 # What you should see
 
-Once the developer tools are open, any requests that sent that are in UCAN format should show up in the list on the `UCan Requests` tab. Note just like the network tab, requests only show up if they initiate after you open developer tools, so you may have to reload the page
+Once the developer tools are open, any requests that sent that are in UCAN format should show up in the list on the `UCan Requests` tab. Note just like the network tab, requests only show up if they initiate after you open developer tools, so you may have to reload the page.
+
+## UCAN Field Visualization
+
+The extension provides detailed visualization of UCAN fields:
+
+- **Capabilities**: Shows the 'can' and 'with' fields for each capability
+- **Fact Field**: If a capability contains a fact field, it will be displayed in a human-readable JSON format using DAG-JSON encoding
+- **Proofs**: Displays the full chain of proofs with their capabilities
+- **Receipts**: Shows the output and execution details of UCAN operations
 
 # Developing
 
