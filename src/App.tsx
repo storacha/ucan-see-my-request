@@ -70,6 +70,12 @@ function App() {
     }
   })
 
+  const handleBulkOperation = (operation: string, selectedRequests: Request[]) => {
+    console.log(`Bulk operation: ${operation}`, selectedRequests);
+    // Handle bulk operations here
+    // This could trigger export, deletion, bookmarking, etc.
+  };
+
   return (
     <Box sx={{
       display: 'flex',
@@ -110,6 +116,7 @@ function App() {
             requests={requests}
             selectedRequest={selectedRequest}
             selectRequest={selectRequest}
+            onBulkOperation={handleBulkOperation}
           />
         </Box>
         {selectedRequest ? (
