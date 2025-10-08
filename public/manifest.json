@@ -3,5 +3,8 @@
   "description": "Inspect UCAN requests",
   "version": "1.0.1",
   "manifest_version": 3,
-  "devtools_page": "devtools.html"
+  "devtools_page": "devtools.html",
+  "permissions": [
+    "clipboardWrite"
+  ]
 }

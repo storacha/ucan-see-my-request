@@ -27,17 +27,31 @@ import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from '@mui/material/Tooltip';
 import Button from '@mui/material/Button';
 import DownloadIcon from '@mui/icons-material/Download';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 import { Fragment } from 'react'
 import { Delegation } from "@ucanto/core/delegation";
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
  
-function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size? : "small" | "medium", index : Record<string, React.ReactNode> }>) {
+function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size? : "small" | "medium", index : Record<string, React.ReactNode | { display: ReactNode, copy: string }> }>) {
   return (
       <Table size={size}>
         <TableBody>
           {
             Object.entries(index).map(([heading, value]) => {
+              const isObjectWithCopy = typeof value === 'object' && value !== null && 'display' in (value as any) && 'copy' in (value as any)
+              const displayNode: ReactNode = isObjectWithCopy ? (value as any).display : (value as ReactNode)
+              const copyText: string = isObjectWithCopy
+                ? String((value as any).copy)
+                : typeof value === 'string'
+                  ? value
+                  : typeof value === 'number'
+                    ? String(value)
+                    : ''
+              const handleCopy = () => {
+                if (!copyText) return
+                navigator.clipboard?.writeText(copyText).catch(() => {})
+              }
               return <TableRow key={heading}>
                 <TableCell sx={{
                   width: '120px',
@@ -55,8 +69,12 @@ function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-all',
                   },
-                }}>{value}</TableCell>
-                <TableCell sx={{ width: '48px', minWidth: '48px' }}></TableCell>
+                }}>{displayNode}</TableCell>
+                <TableCell sx={{ width: '48px', minWidth: '48px' }}>
+                  <IconButton size="small" aria-label={`Copy ${heading}`} onClick={handleCopy} disabled={!copyText}>
+                    <ContentCopyIcon fontSize="inherit" />
+                  </IconButton>
+                </TableCell>
               </TableRow>
             })
           }
@@ -67,9 +85,9 @@ function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size
 }
 
 function CapabilityDisplay({ capability } : { capability: Capability }) {
-  const index : Record<string, React.ReactNode> = Object.assign({
+  const index : Record<string, React.ReactNode | { display: ReactNode, copy: string }> = Object.assign({
     Can: capability.can,
-    With: shortString(capability.with, 60)
+    With: { display: shortString(capability.with, 60), copy: String(capability.with) }
   }, capability.nb ? { NB: JSON.stringify(capability.nb, bigIntSafe, 4) } : {})
   return (
     <TableDisplay size="small" index={index} />
@@ -84,10 +102,10 @@ function ProofDisplay({ proof } : { proof: Proof }) {
   if (isDelegation(proof)) {
     const capabilities = proof.capabilities.map(capability => <CapabilityDisplay capability={capability} />)
     const proofs = proof.proofs.map((proof) => <ProofDisplay proof={proof}/>)
-    const index: Record<string, ReactNode> = {
+    const index: Record<string, ReactNode | { display: ReactNode, copy: string }> = {
       'Root CID': <ShortenAndScroll>{proof.cid.toString()}</ShortenAndScroll>,
-      Issuer: <ShortenAndScroll>{proof.issuer.did()}</ShortenAndScroll>,
-      Audience: <ShortenAndScroll>{proof.audience.did()}</ShortenAndScroll>,
+      Issuer: { display: <ShortenAndScroll>{proof.issuer.did()}</ShortenAndScroll>, copy: proof.issuer.did() },
+      Audience: { display: <ShortenAndScroll>{proof.audience.did()}</ShortenAndScroll>, copy: proof.audience.did() },
       Expiration: proof.expiration.toString(),
     }
     return (
@@ -112,8 +130,8 @@ function InvocationTable({invocation} : { invocation : Invocation }) {
   const capabilities = invocation.capabilities.map((capability) => <CapabilityDisplay capability={capability}/>)
   const proofs = invocation.proofs.map((proof) => <ProofDisplay proof={proof}/>)
   const index = {
-    Issuer: shortString(invocation.issuer.did(), 60),
-    Audience: invocation.audience.did(),
+    Issuer: { display: shortString(invocation.issuer.did(), 60), copy: invocation.issuer.did() },
+    Audience: { display: invocation.audience.did(), copy: invocation.audience.did() },
   }
   return (
     <TableDisplay size="small" index={index}>
@@ -191,10 +209,11 @@ function CollapsableRow({ header, children} : React.PropsWithChildren<{header:st
     </Fragment>
   )
 }
-
 function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expanded : boolean }) {
-  const index = {
-    Out: receipt.out.ok ? <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 2)}</pre> : `Error: ${formatError(receipt.out.error)}`,
+  const index: Record<string, ReactNode | { display: ReactNode, copy: string }> = {
+    Out: receipt.out.ok
+      ? { display: <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 2)}</pre>, copy: JSON.stringify(receipt.out.ok, bigIntSafe, 2) }
+      : `Error: ${formatError(receipt.out.error)}`,
   }
   return (
     <Accordion defaultExpanded={expanded}>
@@ -220,7 +239,14 @@ function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expan
           :
             <TableRow>
               <TableCell>Ran</TableCell>
-              <TableCell>{receipt.ran.toString()}</TableCell>
+              <TableCell>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <span>{receipt.ran.toString()}</span>
+                  <IconButton size="small" aria-label={`Copy Ran`} onClick={() => navigator.clipboard?.writeText(receipt.ran.toString()).catch(() => {})}>
+                    <ContentCopyIcon fontSize="inherit" />
+                  </IconButton>
+                </Box>
+              </TableCell>
               <TableCell></TableCell>
             </TableRow>
           }
