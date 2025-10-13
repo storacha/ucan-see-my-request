@@ -31,6 +31,11 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { Fragment } from 'react'
 import { Delegation } from "@ucanto/core/delegation";
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+
+import DelegationChainViewer from './DelegationChainViewer';
+import CapabilityValidator from './CapabilityValidator';
+import IssuerAudienceAnalyzer from './IssuerAudienceAnalyzer';
+import ProofVerifier from './ProofVerifier';
  
 function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size? : "small" | "medium", index : Record<string, React.ReactNode> }>) {
   return (
@@ -414,6 +419,14 @@ function RequestInspector({request, onClose} : {request: Request, onClose: () =>
     setTabIndex(newValue);
   };
 
+  const message = messageFromRequest(request);
+  const isUcanMessage = typeof message !== 'string';
+  const hasDelegations = isUcanMessage && message.invocations.some(inv => 
+    inv.proofs.some(proof => isDelegation(proof))
+  );
+  const allCapabilities = isUcanMessage ? 
+    message.invocations.flatMap(inv => inv.capabilities) : [];
+
   return (
     <Paper sx={{ height: "100%", overflowY: "scroll" }} elevation={3}>
     <Box sx={{ width: '100%' }}>
@@ -430,9 +443,10 @@ function RequestInspector({request, onClose} : {request: Request, onClose: () =>
             <CloseIcon />
           </IconButton>
         </Tooltip>
-        <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example">
+        <Tabs value={tabIndex} onChange={handleChange} aria-label="request inspector tabs">
           <Tab label="Request" {...a11yProps(0)} />
           <Tab label="Response" {...a11yProps(1)} />
+          {isUcanMessage && <Tab label="UCAN Analysis" {...a11yProps(2)} />}
         </Tabs>
       </Box>
       <CustomTabPanel value={tabIndex} index={0}>
@@ -441,6 +455,36 @@ function RequestInspector({request, onClose} : {request: Request, onClose: () =>
       <CustomTabPanel value={tabIndex} index={1}>
         <ResponseDisplay request={request} />
       </CustomTabPanel>
+      {isUcanMessage && (
+        <CustomTabPanel value={tabIndex} index={2}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            {/* Capability Validation */}
+            {allCapabilities.length > 0 && (
+              <CapabilityValidator capabilities={allCapabilities} />
+            )}
+
+            {hasDelegations && message.invocations.map((invocation, idx) => 
+              invocation.proofs.filter(proof => isDelegation(proof)).map((delegation, proofIdx) => (
+                <DelegationChainViewer 
+                  key={`${invocation.cid.toString()}-${proofIdx}`}
+                  delegation={delegation}
+                  title={`Delegation Chain ${idx + 1}-${proofIdx + 1}`}
+                />
+              ))
+            )}
+
+            {hasDelegations && message.invocations.map((invocation, idx) => 
+              invocation.proofs.filter(proof => isDelegation(proof)).map((delegation, proofIdx) => (
+                <ProofVerifier 
+                  key={`proof-${invocation.cid.toString()}-${proofIdx}`}
+                  delegation={delegation}
+                  title={`Proof Verification ${idx + 1}-${proofIdx + 1}`}
+                />
+              ))
+            )}
+          </Box>
+        </CustomTabPanel>
+      )}
     </Box>
     </Paper>
   );
