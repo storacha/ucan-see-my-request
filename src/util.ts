@@ -1,4 +1,4 @@
-import { AgentMessage} from "@ucanto/interface"
+import { AgentMessage, Capability} from "@ucanto/interface"
 import { CAR, Message } from '@ucanto/core'
 import { Request, isChromeRequest } from './types'
 
@@ -127,4 +127,189 @@ export function formatTiming(timeMs: number | null): string {
   const remainingMinutes = minutes % 60;
   
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+}
+
+export interface DelegationNode {
+  cid: string;
+  issuer: string;
+  audience: string;
+  expiration: string;
+  capabilities: Capability[];
+  proofs: DelegationNode[];
+  isValid: boolean;
+  isExpired: boolean;
+  expiresSoon: boolean;
+  level: number;
+}
+
+export interface CapabilityValidation {
+  isValid: boolean;
+  errors: string[];
+  warnings: string[];
+}
+
+export interface IssuerAudienceStats {
+  issuer: string;
+  audience: string;
+  requestCount: number;
+  capabilities: string[];
+  lastSeen: string;
+  avgResponseTime: number;
+}
+
+export interface ProofIntegrity {
+  isValid: boolean;
+  chainLength: number;
+  brokenLinks: string[];
+  expiredLinks: string[];
+}
+
+export function buildDelegationTree(delegation: any, level: number = 0): DelegationNode {
+  const now = new Date();
+  const expiration = new Date(delegation.expiration);
+  const isExpired = expiration < now;
+  const expiresSoon = !isExpired && (expiration.getTime() - now.getTime()) < 24 * 60 * 60 * 1000; // 24 hours
+
+  return {
+    cid: delegation.cid.toString(),
+    issuer: delegation.issuer.did(),
+    audience: delegation.audience.did(),
+    expiration: delegation.expiration.toString(),
+    capabilities: delegation.capabilities || [],
+    proofs: delegation.proofs ? delegation.proofs.map((proof: any) => buildDelegationTree(proof, level + 1)) : [],
+    isValid: !isExpired,
+    isExpired,
+    expiresSoon,
+    level
+  };
+}
+
+export function validateCapability(capability: Capability): CapabilityValidation {
+  const errors: string[] = [];
+  const warnings: string[] = [];
+
+  if (!capability.can) {
+    errors.push('Capability missing "can" field');
+  }
+
+  if (!capability.with) {
+    errors.push('Capability missing "with" field');
+  }
+
+  if (capability.can && typeof capability.can !== 'string') {
+    errors.push('Capability "can" field must be a string');
+  }
+
+  if (capability.with && typeof capability.with !== 'string') {
+    errors.push('Capability "with" field must be a string');
+  }
+
+  if (capability.can && !capability.can.includes('/')) {
+    warnings.push('Capability "can" field should typically include a namespace (e.g., "store/add")');
+  }
+
+  return {
+    isValid: errors.length === 0,
+    errors,
+    warnings
+  };
+}
+
+export function analyzeIssuerAudience(requests: Request[]): IssuerAudienceStats[] {
+  const statsMap = new Map<string, IssuerAudienceStats>();
+
+  requests.forEach(request => {
+    const message = messageFromRequest(request);
+    if (typeof message === 'string') return;
+
+    message.invocations.forEach(invocation => {
+      const key = `${invocation.issuer.did()}-${invocation.audience.did()}`;
+      const existing = statsMap.get(key) || {
+        issuer: invocation.issuer.did(),
+        audience: invocation.audience.did(),
+        requestCount: 0,
+        capabilities: [],
+        lastSeen: new Date().toISOString(),
+        avgResponseTime: 0
+      };
+
+      existing.requestCount++;
+      existing.lastSeen = new Date().toISOString();
+      
+      const timing = getRequestTiming(request);
+      if (timing) {
+        existing.avgResponseTime = (existing.avgResponseTime + timing) / 2;
+      }
+
+      invocation.capabilities.forEach(capability => {
+        if (!existing.capabilities.includes(capability.can)) {
+          existing.capabilities.push(capability.can);
+        }
+      });
+
+      statsMap.set(key, existing);
+    });
+  });
+
+  return Array.from(statsMap.values()).sort((a, b) => b.requestCount - a.requestCount);
+}
+
+export function verifyProofIntegrity(delegation: any): ProofIntegrity {
+  const brokenLinks: string[] = [];
+  const expiredLinks: string[] = [];
+  let chainLength = 0;
+
+  function traverseProofs(proof: any, depth: number = 0): void {
+    chainLength = Math.max(chainLength, depth);
+    
+    if (!proof) {
+      brokenLinks.push(`Missing proof at depth ${depth}`);
+      return;
+    }
+
+    const expiration = new Date(proof.expiration);
+    if (expiration < new Date()) {
+      expiredLinks.push(`${proof.cid.toString()} (expired: ${expiration.toISOString()})`);
+    }
+
+    if (proof.proofs) {
+      proof.proofs.forEach((subProof: any) => traverseProofs(subProof, depth + 1));
+    }
+  }
+
+  traverseProofs(delegation);
+
+  return {
+    isValid: brokenLinks.length === 0 && expiredLinks.length === 0,
+    chainLength,
+    brokenLinks,
+    expiredLinks
+  };
+}
+
+export function getExpirationStatus(expiration: string): { status: 'valid' | 'expired' | 'expires-soon'; color: string; message: string } {
+  const now = new Date();
+  const expDate = new Date(expiration);
+  const timeDiff = expDate.getTime() - now.getTime();
+  const hoursUntilExpiry = timeDiff / (1000 * 60 * 60);
+
+  if (timeDiff < 0) {
+    return {
+      status: 'expired',
+      color: '#f44336',
+      message: `Expired ${Math.abs(Math.floor(hoursUntilExpiry / 24))} days ago`
+    };
+  } else if (hoursUntilExpiry < 24) {
+    return {
+      status: 'expires-soon',
+      color: '#ff9800',
+      message: `Expires in ${Math.floor(hoursUntilExpiry)} hours`
+    };
+  } else {
+    return {
+      status: 'valid',
+      color: '#4caf50',
+      message: `Valid for ${Math.floor(hoursUntilExpiry / 24)} days`
+    };
+  }
 }
