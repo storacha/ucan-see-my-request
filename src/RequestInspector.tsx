@@ -9,6 +9,10 @@ import Card from '@mui/material/Card'
 import CardHeader from '@mui/material/CardHeader';
 import CardContent from '@mui/material/CardContent';
 import {shortString, bigIntSafe, messageFromRequest, decodeMessage, formatError, getRequestStatus, getStatusColor} from './util'
+import List from '@mui/material/List'
+import ListItem from '@mui/material/ListItem'
+import ListItemButton from '@mui/material/ListItemButton'
+import ListItemText from '@mui/material/ListItemText'
 import Accordion from '@mui/material/Accordion';
 import AccordionSummary from '@mui/material/AccordionSummary';
 import AccordionDetails from '@mui/material/AccordionDetails';
@@ -406,9 +410,10 @@ function CustomTabPanel(props: TabPanelProps) {
   );
 }
 
-function RequestInspector({request, onClose} : {request: Request, onClose: () => void}) {
+function RequestInspector({request, onClose, getRelated} : {request: Request, onClose: () => void, getRelated?: (r: Request) => Request[]}) {
   const [tabIndex, setTabIndex] = useState(0)
   const status = getRequestStatus(request);
+  const related = getRelated ? getRelated(request) : []
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
@@ -437,6 +442,28 @@ function RequestInspector({request, onClose} : {request: Request, onClose: () =>
       </Box>
       <CustomTabPanel value={tabIndex} index={0}>
         <RequestDisplay request={request}/> 
+        {related.length > 0 && (
+          <Card sx={{ mt: 2 }}>
+            <CardHeader 
+              title="Related Requests"
+              sx={{
+                py: 1,
+                '& .MuiCardHeader-title': {
+                  fontSize: '1rem',
+                },
+              }}
+            />
+            <CardContent sx={{ py: 0 }}>
+              <List dense>
+                {related.map((r, idx) => (
+                  <ListItem key={idx} disablePadding>
+                    <ListItemText primary={r.request.url} secondary={`HTTP ${r.response.status}`} />
+                  </ListItem>
+                ))}
+              </List>
+            </CardContent>
+          </Card>
+        )}
       </CustomTabPanel> 
       <CustomTabPanel value={tabIndex} index={1}>
         <ResponseDisplay request={request} />

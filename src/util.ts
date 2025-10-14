@@ -128,3 +128,42 @@ export function formatTiming(timeMs: number | null): string {
   
   return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
 }
+
+export function getRequestOrigin(request: Request): string {
+  try {
+    const url = new URL(request.request.url)
+    return url.origin
+  } catch {
+    return ''
+  }
+}
+
+export function getInvocationFingerprint(request: Request): string | null {
+  const message = messageFromRequest(request)
+  if (typeof message === 'string') return null
+  if (!message || message.invocations.length === 0) return null
+  const first = message.invocations[0]
+  const caps = first.capabilities.map(c => `${c.can}:${typeof c.with === 'string' ? c.with : String(c.with)}`).join('|')
+  return `${caps}`
+}
+
+export function getRequestStartTimeMs(request: Request): number | null {
+  const har = request as chrome.devtools.network.HAREntry
+  if (har && (har as any).startedDateTime) {
+    const t = Date.parse((har as any).startedDateTime)
+    return isNaN(t) ? null : t
+  }
+  const dev = request as chrome.devtools.network.Request
+  if (dev && (dev as any).startedDateTime) {
+    const t = Date.parse((dev as any).startedDateTime)
+    return isNaN(t) ? null : t
+  }
+  return null
+}
+
+export function getRequestKey(request: Request): string {
+  const url = request.request.url
+  const status = request.response?.status ?? 0
+  const start = getRequestStartTimeMs(request) ?? 0
+  return `${url}#${status}#${start}`
+}
