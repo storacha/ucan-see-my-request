@@ -1,6 +1,6 @@
 # ucan-see-my-request
 
-*A simple Chrome extension to view requests for UCanto endpoints*
+_A simple Chrome extension to view requests for UCanto endpoints_
 
 This is an in development extension for debugging requests to Storacha's endpoints, which are built using Ucanto, which encodes UCAN's into CAR files in the request and response bodies.
 
@@ -26,6 +26,31 @@ Sometimes it doesn't show up immediately -- if this is the case, I recommend clo
 # What you should see
 
 Once the developer tools are open, any requests that sent that are in UCAN format should show up in the list on the `UCan Requests` tab. Note just like the network tab, requests only show up if they initiate after you open developer tools, so you may have to reload the page
+
+# Publishing to Chrome Web Store
+This project includes automated release workflows that create a packaged extension ready for Chrome Web Store submission.
+
+## Creating a Release
+
+1. **Automated Release**: When you push a git tag starting with `v` (e.g., `v1.0.2`), the release workflow automatically:
+   - Builds the production extension
+   - Creates a `extension.zip` file
+   - Publishes a GitHub release with the zip file attached
+
+2. **Manual Release**: You can also trigger a release manually from the GitHub Actions tab using the "Release" workflow.
+
+## Uploading to Chrome Web Store
+
+Once you have the `extension.zip` file from a GitHub release:
+
+1. Go to the [Chrome Web Store Developer Dashboard](https://chrome.google.com/webstore/devconsole)
+2. Sign in with your Google account
+3. Click "Add new item" or select your existing extension
+4. Upload the `extension.zip` file
+5. Fill in the required store listing information
+6. Submit for review
+
+For detailed instructions, see the [Chrome Web Store publishing guide](https://developer.chrome.com/docs/webstore/publish).
 
 # Developing
 
