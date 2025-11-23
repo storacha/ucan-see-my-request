@@ -27,17 +27,23 @@ import CloseIcon from '@mui/icons-material/Close';
 import Tooltip from '@mui/material/Tooltip';
 import Button from '@mui/material/Button';
 import DownloadIcon from '@mui/icons-material/Download';
+import { CopyButton } from './CopyButton';
+import { JsonViewer } from './JsonViewer';
 
 import { Fragment } from 'react'
 import { Delegation } from "@ucanto/core/delegation";
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
  
-function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size? : "small" | "medium", index : Record<string, React.ReactNode> }>) {
+function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size? : "small" | "medium", index : Record<string, React.ReactNode | { value: React.ReactNode, copyable?: string }> }>) {
   return (
       <Table size={size}>
         <TableBody>
           {
-            Object.entries(index).map(([heading, value]) => {
+            Object.entries(index).map(([heading, content]) => {
+              const isObject = content && typeof content === 'object' && 'value' in content;
+              const value = isObject ? content.value : content;
+              const copyText = isObject ? content.copyable : null;
+              
               return <TableRow key={heading}>
                 <TableCell sx={{
                   width: '120px',
@@ -55,7 +61,12 @@ function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size
                     whiteSpace: 'pre-wrap',
                     wordBreak: 'break-all',
                   },
-                }}>{value}</TableCell>
+                }}>
+                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                    {value}
+                    {copyText && <CopyButton text={copyText} size="small" />}
+                  </Box>
+                </TableCell>
                 <TableCell sx={{ width: '48px', minWidth: '48px' }}></TableCell>
               </TableRow>
             })
@@ -67,10 +78,10 @@ function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size
 }
 
 function CapabilityDisplay({ capability } : { capability: Capability }) {
-  const index : Record<string, React.ReactNode> = Object.assign({
-    Can: capability.can,
-    With: shortString(capability.with, 60)
-  }, capability.nb ? { NB: JSON.stringify(capability.nb, bigIntSafe, 4) } : {})
+  const index : Record<string, React.ReactNode | { value: React.ReactNode, copyable?: string }> = Object.assign({
+    Can: { value: capability.can, copyable: capability.can },
+    With: { value: shortString(capability.with, 60), copyable: capability.with }
+  }, capability.nb ? { NB: <JsonViewer data={capability.nb} expanded={false} maxHeight="200px" /> } : {})
   return (
     <TableDisplay size="small" index={index} />
   )
@@ -82,13 +93,22 @@ function ShortenAndScroll({children}: {children: ReactNode}){
 
 function ProofDisplay({ proof } : { proof: Proof }) {
   if (isDelegation(proof)) {
-    const capabilities = proof.capabilities.map(capability => <CapabilityDisplay capability={capability} />)
-    const proofs = proof.proofs.map((proof) => <ProofDisplay proof={proof}/>)
-    const index: Record<string, ReactNode> = {
-      'Root CID': <ShortenAndScroll>{proof.cid.toString()}</ShortenAndScroll>,
-      Issuer: <ShortenAndScroll>{proof.issuer.did()}</ShortenAndScroll>,
-      Audience: <ShortenAndScroll>{proof.audience.did()}</ShortenAndScroll>,
-      Expiration: proof.expiration.toString(),
+    const capabilities = proof.capabilities.map((capability, idx) => <CapabilityDisplay key={idx} capability={capability} />)
+    const proofs = proof.proofs.map((proof, idx) => <ProofDisplay key={idx} proof={proof}/>)
+    const index: Record<string, ReactNode | { value: ReactNode, copyable?: string }> = {
+      'Root CID': { 
+        value: <ShortenAndScroll>{proof.cid.toString()}</ShortenAndScroll>,
+        copyable: proof.cid.toString()
+      },
+      Issuer: { 
+        value: <ShortenAndScroll>{proof.issuer.did()}</ShortenAndScroll>,
+        copyable: proof.issuer.did()
+      },
+      Audience: { 
+        value: <ShortenAndScroll>{proof.audience.did()}</ShortenAndScroll>,
+        copyable: proof.audience.did()
+      },
+      Expiration: proof.expiration ? proof.expiration.toString() : 'Never',
     }
     return (
       <TableDisplay size="small" index={index}>
@@ -101,19 +121,28 @@ function ProofDisplay({ proof } : { proof: Proof }) {
       </TableDisplay>
     )
   } else {
-    const index: Record<string, ReactNode> = {
-      'Root CID': <ShortenAndScroll>{proof.toString()}</ShortenAndScroll>,
+    const index: Record<string, ReactNode | { value: ReactNode, copyable?: string }> = {
+      'Root CID': { 
+        value: <ShortenAndScroll>{proof.toString()}</ShortenAndScroll>,
+        copyable: proof.toString()
+      },
     }
     return <TableDisplay size="small" index={index} />
   }
 }
 
 function InvocationTable({invocation} : { invocation : Invocation }) {
-  const capabilities = invocation.capabilities.map((capability) => <CapabilityDisplay capability={capability}/>)
-  const proofs = invocation.proofs.map((proof) => <ProofDisplay proof={proof}/>)
+  const capabilities = invocation.capabilities.map((capability, idx) => <CapabilityDisplay key={idx} capability={capability}/>)
+  const proofs = invocation.proofs.map((proof, idx) => <ProofDisplay key={idx} proof={proof}/>)
   const index = {
-    Issuer: shortString(invocation.issuer.did(), 60),
-    Audience: invocation.audience.did(),
+    Issuer: { 
+      value: shortString(invocation.issuer.did(), 60),
+      copyable: invocation.issuer.did()
+    },
+    Audience: { 
+      value: invocation.audience.did(),
+      copyable: invocation.audience.did()
+    },
   }
   return (
     <TableDisplay size="small" index={index}>
@@ -138,9 +167,16 @@ function InvocationDisplay({invocation, expanded = false} : { invocation : Invoc
           '& .MuiAccordionSummary-expandIconWrapper': {
             marginLeft: 'auto',
           },
+          '& .MuiAccordionSummary-content': {
+            display: 'flex',
+            alignItems: 'center',
+          },
         }}
       >
-        { invocation.cid.toString() }
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          { invocation.cid.toString() }
+          <CopyButton text={invocation.cid.toString()} tooltip="Copy CID" />
+        </Box>
       </AccordionSummary>
       <AccordionDetails>
         <TableContainer>
@@ -194,7 +230,11 @@ function CollapsableRow({ header, children} : React.PropsWithChildren<{header:st
 
 function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expanded : boolean }) {
   const index = {
-    Out: receipt.out.ok ? <pre>{JSON.stringify(receipt.out.ok, bigIntSafe, 2)}</pre> : `Error: ${formatError(receipt.out.error)}`,
+    Out: receipt.out.ok ? 
+      <JsonViewer data={receipt.out.ok} expanded={true} /> : 
+      <Box sx={{ color: 'error.main' }}>
+        Error: <JsonViewer data={receipt.out.error} expanded={false} />
+      </Box>,
   }
   return (
     <Accordion defaultExpanded={expanded}>
@@ -206,9 +246,16 @@ function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expan
           '& .MuiAccordionSummary-expandIconWrapper': {
             marginLeft: 'auto',
           },
+          '& .MuiAccordionSummary-content': {
+            display: 'flex',
+            alignItems: 'center',
+          },
         }}
       >
-        { receipt.link().toString() }
+        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          { receipt.link().toString() }
+          <CopyButton text={receipt.link().toString()} tooltip="Copy Receipt Link" />
+        </Box>
       </AccordionSummary>
       <AccordionDetails>
         <TableContainer>
@@ -219,9 +266,14 @@ function ReceiptDisplay({receipt, expanded = false} : { receipt : Receipt, expan
             </CollapsableRow>
           :
             <TableRow>
-              <TableCell>Ran</TableCell>
-              <TableCell>{receipt.ran.toString()}</TableCell>
-              <TableCell></TableCell>
+              <TableCell sx={{ width: '120px', minWidth: '120px', fontWeight: 500 }}>Ran</TableCell>
+              <TableCell sx={{ maxWidth: 0, width: '100%' }}>
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {receipt.ran.toString()}
+                  <CopyButton text={receipt.ran.toString()} />
+                </Box>
+              </TableCell>
+              <TableCell sx={{ width: '48px', minWidth: '48px' }}></TableCell>
             </TableRow>
           }
         </TableDisplay>
