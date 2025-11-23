@@ -70,6 +70,11 @@ function App() {
     }
   })
 
+  const handleClearRequests = () => {
+    dispatch({ action: 'set', requests: [] });
+    selectRequest(null);
+  };
+
   return (
     <Box sx={{
       display: 'flex',
@@ -110,6 +115,7 @@ function App() {
             requests={requests}
             selectedRequest={selectedRequest}
             selectRequest={selectRequest}
+            onClearRequests={handleClearRequests}
           />
         </Box>
         {selectedRequest ? (
