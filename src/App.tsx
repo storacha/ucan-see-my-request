@@ -8,6 +8,7 @@ import IconButton from '@mui/material/IconButton';
 import Brightness4Icon from '@mui/icons-material/Brightness4';
 import Brightness7Icon from '@mui/icons-material/Brightness7';
 import { useTheme } from './ThemeContext';
+import { AnnotationProvider } from './AnnotationContext';
 
 type SetAction = {
   action: "set",
@@ -71,56 +72,58 @@ function App() {
   })
 
   return (
-    <Box sx={{
-      display: 'flex',
-      height: '100vh',
-      flexDirection: 'column'
-    }}>
+    <AnnotationProvider>
       <Box sx={{
         display: 'flex',
-        justifyContent: 'flex-end',
-        p: 1,
-        borderBottom: 1,
-        borderColor: 'divider'
-      }}>
-        <IconButton onClick={toggleTheme} color="inherit">
-          {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
-        </IconButton>
-      </Box>
-      <Box sx={{
-        display: 'flex',
-        flex: 1,
-        flexDirection: {
-          xs: 'column',
-          md: 'row'
-        }
+        height: '100vh',
+        flexDirection: 'column'
       }}>
         <Box sx={{
-          flex: "1 1 50%",
-          height: {
-            xs: "50%",
-            md: "100%",
-          },
-          width: {
-            xs: "100%",
-            md: "50%",
-          },
+          display: 'flex',
+          justifyContent: 'flex-end',
+          p: 1,
+          borderBottom: 1,
+          borderColor: 'divider'
         }}>
-          <RequestList
-            requests={requests}
-            selectedRequest={selectedRequest}
-            selectRequest={selectRequest}
-          />
+          <IconButton onClick={toggleTheme} color="inherit">
+            {isDarkMode ? <Brightness7Icon /> : <Brightness4Icon />}
+          </IconButton>
         </Box>
-        {selectedRequest ? (
+        <Box sx={{
+          display: 'flex',
+          flex: 1,
+          flexDirection: {
+            xs: 'column',
+            md: 'row'
+          }
+        }}>
           <Box sx={{
             flex: "1 1 50%",
+            height: {
+              xs: "50%",
+              md: "100%",
+            },
+            width: {
+              xs: "100%",
+              md: "50%",
+            },
           }}>
-            <RequestInspector request={selectedRequest} onClose={() => selectRequest(null)}/>
+            <RequestList
+              requests={requests}
+              selectedRequest={selectedRequest}
+              selectRequest={selectRequest}
+            />
           </Box>
-        ) : null}
+          {selectedRequest ? (
+            <Box sx={{
+              flex: "1 1 50%",
+            }}>
+              <RequestInspector request={selectedRequest} onClose={() => selectRequest(null)}/>
+            </Box>
+          ) : null}
+        </Box>
       </Box>
-    </Box>
+    </AnnotationProvider>
   );
 }
 

@@ -1,7 +1,7 @@
 import { useState, useEffect, ReactNode } from "react"
 import { AgentMessage, Invocation, Receipt, Capability, Proof, Delegation as DelegationType} from "@ucanto/interface"
 import { isDelegation} from '@ucanto/core'
-import { Request, isChromeRequest } from './types'
+import { Request, isChromeRequest, RequestAnnotation } from './types'
 import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Box from '@mui/material/Box';
@@ -31,6 +31,13 @@ import DownloadIcon from '@mui/icons-material/Download';
 import { Fragment } from 'react'
 import { Delegation } from "@ucanto/core/delegation";
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import { useAnnotations, getRequestId } from './AnnotationContext';
+import { AnnotationManager } from './AnnotationManager';
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import ErrorIcon from '@mui/icons-material/Error';
+import Chip from '@mui/material/Chip';
  
 function TableDisplay({ size,  index , children} : React.PropsWithChildren<{size? : "small" | "medium", index : Record<string, React.ReactNode> }>) {
   return (
@@ -251,7 +258,6 @@ function MessageDisplay({message, request, type} : { message : AgentMessage, req
   const handleSave = async () => {
     if (isChromeRequest(request)) {
       if (type === 'request') {
-        // For request, we need to get the request body
         const anyReq: any = request as any
         const postData = anyReq?.request?.postData
         if (postData?.text) {
@@ -271,7 +277,6 @@ function MessageDisplay({message, request, type} : { message : AgentMessage, req
           URL.revokeObjectURL(url)
         }
       } else {
-        // For response, get the response body
         request.getContent((content, encoding) => {
           if (content) {
             let decoded = content
@@ -408,11 +413,24 @@ function CustomTabPanel(props: TabPanelProps) {
 
 function RequestInspector({request, onClose} : {request: Request, onClose: () => void}) {
   const [tabIndex, setTabIndex] = useState(0)
+  const [annotationDialogOpen, setAnnotationDialogOpen] = useState(false)
+  const { getAnnotation, setAnnotation, deleteAnnotation } = useAnnotations()
+  const requestId = getRequestId(request)
+  const annotation = getAnnotation(requestId)
   const status = getRequestStatus(request);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setTabIndex(newValue);
   };
+
+  const handleSaveAnnotation = (newAnnotation: RequestAnnotation) => {
+    setAnnotation(requestId, newAnnotation)
+  }
+
+  const handleDeleteAnnotation = () => {
+    deleteAnnotation(requestId)
+    setAnnotationDialogOpen(false)
+  }
 
   return (
     <Paper sx={{ height: "100%", overflowY: "scroll" }} elevation={3}>
@@ -425,15 +443,44 @@ function RequestInspector({request, onClose} : {request: Request, onClose: () =>
             mr: 1 
           }} 
         />
+        {annotation?.isPinned && (
+          <Tooltip title="Pinned">
+            <PushPinIcon sx={{ fontSize: 16, color: 'primary.main', mr: 1 }} />
+          </Tooltip>
+        )}
+        {annotation?.status === 'resolved' && (
+          <Tooltip title="Resolved">
+            <CheckCircleIcon sx={{ fontSize: 16, color: 'success.main', mr: 1 }} />
+          </Tooltip>
+        )}
+        {annotation?.status === 'needs-attention' && (
+          <Tooltip title="Needs Attention">
+            <ErrorIcon sx={{ fontSize: 16, color: 'error.main', mr: 1 }} />
+          </Tooltip>
+        )}
         <Tooltip title="Close panel">
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
         </Tooltip>
-        <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example">
+        <Tooltip title="Edit annotation">
+          <IconButton onClick={() => setAnnotationDialogOpen(true)}>
+            <EditNoteIcon />
+          </IconButton>
+        </Tooltip>
+        <Tabs value={tabIndex} onChange={handleChange} aria-label="basic tabs example" sx={{ ml: 1 }}>
           <Tab label="Request" {...a11yProps(0)} />
           <Tab label="Response" {...a11yProps(1)} />
         </Tabs>
+        {annotation?.note && (
+          <Chip 
+            label="Has note" 
+            size="small" 
+            sx={{ ml: 'auto', mr: 1 }}
+            color="primary"
+            variant="outlined"
+          />
+        )}
       </Box>
       <CustomTabPanel value={tabIndex} index={0}>
         <RequestDisplay request={request}/> 
@@ -442,6 +489,14 @@ function RequestInspector({request, onClose} : {request: Request, onClose: () =>
         <ResponseDisplay request={request} />
       </CustomTabPanel>
     </Box>
+    <AnnotationManager
+      open={annotationDialogOpen}
+      onClose={() => setAnnotationDialogOpen(false)}
+      request={request}
+      annotation={annotation}
+      onSave={handleSaveAnnotation}
+      onDelete={handleDeleteAnnotation}
+    />
     </Paper>
   );
 }
