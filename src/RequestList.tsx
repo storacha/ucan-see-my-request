@@ -11,6 +11,8 @@ import Switch from '@mui/material/Switch';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import { isCarRequest, messageFromRequest, getRequestStatus, getStatusColor, getRequestTiming, formatTiming } from "./util";
 import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import Typography from '@mui/material/Typography';
+import KeyboardIcon from '@mui/icons-material/Keyboard';
 
 function RequestEntry({ request, selectedRequest, selectRequest } : {request: Request, selectedRequest: Request | null, selectRequest: (request: Request) => void}) {
   const message = messageFromRequest(request)
@@ -19,7 +21,20 @@ function RequestEntry({ request, selectedRequest, selectRequest } : {request: Re
   const formattedTiming = formatTiming(timing)
   
   return (
-    <TableRow onClick={() => selectRequest(request)} hover selected={request === selectedRequest}>
+    <TableRow 
+      onClick={() => selectRequest(request)} 
+      hover 
+      selected={request === selectedRequest}
+      sx={{
+        cursor: 'pointer',
+        '&.Mui-selected': {
+          backgroundColor: theme => theme.palette.action.selected,
+        },
+        '&.Mui-selected:hover': {
+          backgroundColor: theme => theme.palette.action.hover,
+        },
+      }}
+    >
       <TableCell sx={{
         maxWidth: '300px',
         overflow: 'hidden',
@@ -57,10 +72,25 @@ function RequestList({ requests, selectedRequest, selectRequest } : { requests: 
     localStorage.setItem('persistOnReload', JSON.stringify(e.target.checked))
   }
 
-  const requestItems = requests.filter(isCarRequest).map((request, idx) => <RequestEntry key={`${request.request.url}-${idx}`} selectedRequest={selectedRequest} selectRequest={selectRequest} request={request} />)
+  const filteredRequests = requests.filter(isCarRequest)
+  const requestItems = filteredRequests.map((request, idx) => (
+    <RequestEntry 
+      key={`${request.request.url}-${idx}`} 
+      selectedRequest={selectedRequest} 
+      selectRequest={selectRequest} 
+      request={request} 
+    />
+  ))
+  
   return (
     <TableContainer sx={{height: "100%", overflowY: "scroll"}}>
-    <Box sx={{ display: 'flex', justifyContent: 'flex-end', px: 2, py: 1 }}>
+    <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', px: 2, py: 1 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <KeyboardIcon sx={{ fontSize: 16, color: 'text.secondary' }} />
+        <Typography variant="caption" color="text.secondary">
+          Use arrow keys or j/k to navigate, Enter to open, {selectedRequest ? 'Ctrl/Cmd+C to copy, ' : ''}? for help
+        </Typography>
+      </Box>
       <FormControlLabel
         control={<Switch defaultChecked={defaultChecked} onChange={handlePersistChange} />}
         label="Persist across reloads"
@@ -85,7 +115,18 @@ function RequestList({ requests, selectedRequest, selectRequest } : { requests: 
         </TableRow>
       </TableHead>
       <TableBody>
-      { requestItems }
+      { requestItems.length > 0 ? requestItems : (
+        <TableRow>
+          <TableCell colSpan={3} align="center" sx={{ py: 8 }}>
+            <Typography variant="body1" color="text.secondary">
+              No UCAN requests captured yet.
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+              Navigate to a UCAN-enabled page and requests will appear here.
+            </Typography>
+          </TableCell>
+        </TableRow>
+      )}
       </TableBody>
     </Table>
     </TableContainer>

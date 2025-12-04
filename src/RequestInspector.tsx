@@ -425,7 +425,7 @@ function RequestInspector({request, onClose} : {request: Request, onClose: () =>
             mr: 1 
           }} 
         />
-        <Tooltip title="Close panel">
+        <Tooltip title="Close panel (Esc)">
           <IconButton onClick={onClose}>
             <CloseIcon />
           </IconButton>
